@@ -1,17 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <title>Pokémon: Ditto</title>  
-    <link rel="stylesheet" href="style.css">
-  </head>
-  <body>
-    <div class="container">
-      <h1>Pokémon Info</h1>
-      <div id="pokemon-card">
-           <p>Loading...</p>
+<head>
+  <meta charset="UTF-8">
+  <title>Pokédex Lookup</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Pokémon Lookup</h1>
+
+    <div class="input-group">
+      <input type="text" id="searchInput" placeholder="Enter Pokémon name" />
+      <button id="searchButton">Search</button>
+    </div>
+
+    <div class="input-group">
+      <label for="pokemonDropdown">Choose a Pokémon:</label>
+      <select id="pokemonDropdown">
+        <option value="">-- Loading Pokémon... --</option>
+      </select>
+    </div>
+
+    <div id="pokemon-card">
+      <p>Choose or search for a Pokémon above</p>
     </div>
   </div>
-    <script src="script.js"></script>
+
+  <script src="script.js"></script>
 </body>
 </html>
