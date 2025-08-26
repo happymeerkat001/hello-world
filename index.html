@@ -2,27 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Pokédex Lookup</title>
+  <title>Pokédex Table</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
-    <h1>Pokémon Lookup</h1>
+    <h1>Pokémon Table</h1>
+    <table id="pokemon-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Type(s)</th>
+          <th>Weight</th>
+          <th>Base XP</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
 
-    <div class="input-group">
-      <input type="text" id="searchInput" placeholder="Enter Pokémon name" />
-      <button id="searchButton">Search</button>
-    </div>
+    <div id="pagination"></div> //Pagination buttons
+  </div>
 
-    <div class="input-group">
-      <label for="pokemonDropdown">Choose a Pokémon:</label>
-      <select id="pokemonDropdown">
-        <option value="">-- Loading Pokémon... --</option>
-      </select>
-    </div>
-
-    <div id="pokemon-card">
-      <p>Choose or search for a Pokémon above</p>
+  <!-- Modal -->
+  <div id="modal" class="modal hidden"> //Modal popup
+    <div class="modal-content"> 
+      <span id="close">&times;</span>
+      <div id="modal-body">Loading...</div>
     </div>
   </div>
 

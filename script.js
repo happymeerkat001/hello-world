@@ -1,58 +1,91 @@
-const dropdown = document.getElementById('pokemonDropdown');
-const searchInput = document.getElementById('searchInput');
-const searchButton = document.getElementById('searchButton');
-const card = document.getElementById('pokemon-card');
+// ===== Target (DOM) =====
+const tableBody  = document.querySelector('#pokemon-table tbody');
+const pagination = document.getElementById('pagination');
+const modal      = document.getElementById('modal');
+const modalBody  = document.getElementById('modal-body');
 
-// Load all Pokémon names into dropdown
-fetch('https://pokeapi.co/api/v2/pokemon?limit=1302')
-  .then(res => res.json())
-  .then(data => {
-    dropdown.innerHTML = '<option value="">-- Select a Pokémon --</option>';
-    data.results.forEach(pokemon => {
-      const option = document.createElement('option');
-      option.value = pokemon.name;
-      option.textContent = pokemon.name;
-      dropdown.appendChild(option);
-    });
-  });
+// ===== Trigger (load-time) → Controller =====
+let currentPage = 1;
+const perPage   = 20;
 
-// Handle dropdown change
-dropdown.addEventListener('change', () => {
-  if (dropdown.value) {
-    fetchPokemon(dropdown.value);
-  }
-});
+fetchPage(currentPage);
+setupPagination();
 
-// Handle search button click
-searchButton.addEventListener('click', () => {
-  const name = searchInput.value.trim().toLowerCase();
-  if (name) {
-    fetchPokemon(name);
-  }
-});
+// ===== Controller: build one page of rows =====
+async function fetchPage(page) {
+  const offset = (page - 1) * perPage;
 
-// Fetch and display Pokémon
-function fetchPokemon(name) {
-  card.innerHTML = '<p>Loading...</p>';
+  // View: loading state
+  tableBody.innerHTML = `<tr><td colspan="5">Loading…</td></tr>`;
 
-  fetch(`https://pokeapi.co/api/v2/pokemon/${name}`)
-    .then(res => {
-      if (!res.ok) throw new Error('Not found');
-      return res.json();
-    })
-    .then(data => {
-      const imgUrl = data.sprites.front_default;
-      const type = data.types.map(t => t.type.name).join(', ');
-      card.innerHTML = `
-        <h2>${data.name.toUpperCase()}</h2>
-        <img src="${imgUrl}" alt="${data.name}" />
-        <p><strong>Type:</strong> ${type}</p>
-        <p><strong>Weight:</strong> ${data.weight}</p>
-        <p><strong>Base Experience:</strong> ${data.base_experience}</p>
+  try {
+    // Request → Response (list)
+    const listRes = await fetch(`https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=${perPage}`);
+    const list    = await listRes.json(); // { results: [{ name, url }, ...] }
+
+    // Request → Response (details, in parallel)
+    const detailPromises = list.results.map(p => fetch(p.url).then(r => r.json()));
+    const details = await Promise.all(detailPromises);
+
+    // View: success — render table
+    tableBody.innerHTML = '';
+    details.forEach((detail, index) => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${offset + index + 1}</td>
+        <td>${detail.name}</td>
+        <td>${detail.types.map(t => t.type.name).join(', ')}</td>
+        <td>${detail.weight}</td>
+        <td>${detail.base_experience}</td>
       `;
-    })
-    .catch(err => {
-      card.innerHTML = `<p class="error">Error: Pokémon not found</p>`;
-      console.error(err);
+      // Trigger (user) → Controller (showModal)
+      row.addEventListener('click', () => showModal(detail));
+      tableBody.appendChild(row);
     });
+  } catch (err) {
+    // View: error
+    tableBody.innerHTML = `<tr><td colspan="5" class="error">Failed to load Pokémon.</td></tr>`;
+    console.error(err);
+  }
 }
+
+// ===== Controller: build pagination + wire triggers =====
+function setupPagination() {
+  pagination.innerHTML = ''; // View
+
+  for (let i = 1; i <= 66; i++) {
+    const btn = document.createElement('button'); // View
+    btn.textContent = i;
+    btn.className   = 'page-btn';
+    btn.disabled    = (i === currentPage);
+
+    // Trigger (user) → Controller
+    btn.addEventListener('click', () => {
+      currentPage = i;
+      fetchPage(currentPage); // Controller → (Request → Response → View)
+      setupPagination();      // Controller → View
+    });
+
+    pagination.appendChild(btn); // View
+  }
+}
+
+// ===== Controller: show modal (View only) =====
+function showModal(pokemon) {
+  const img = pokemon.sprites.front_default || '';
+  modalBody.innerHTML = `
+    <h2>${pokemon.name.toUpperCase()}</h2>
+    ${img ? `<img src="${img}" alt="${pokemon.name}" />` : ''}
+    <p><strong>Type:</strong> ${pokemon.types.map(t => t.type.name).join(', ')}</p>
+    <p><strong>Weight:</strong> ${pokemon.weight}</p>
+    <p><strong>Base Experience:</strong> ${pokemon.base_experience}</p>
+  `;
+  modal.classList.remove('hidden'); // View
+}
+const closeModal = document.getElementById('close');
+
+
+// ===== Trigger (user): close modal → View =====
+closeModal.addEventListener('click', () => {
+  modal.classList.add('hidden'); // View
+});
